@@ -1,0 +1,11 @@
+langchain-core
+langchain-google-genai
+langchain-openai
+langgraph
+qdrant-client
+scikit-learn
+fastapi
+uvicorn[standard]
+python-dotenv
+pypdf
+sentence-transformers
