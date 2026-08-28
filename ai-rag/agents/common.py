@@ -18,6 +18,7 @@ Offline fallback if LLM fails
 
 import os
 import pickle
+import re
 
 from embeddings import (
     get_embeddings,
@@ -45,6 +46,15 @@ VECTORIZER_PATH = os.path.join(
     "..",
     "vectorizer_state.pkl",
 )
+
+# Lower threshold than the previous 0.70.
+#
+# This is important because TF-IDF / cosine similarity scores can
+# vary depending on the query.
+MIN_SCORE = 0.30
+
+# Retrieve more candidates from Qdrant before filtering.
+RETRIEVAL_K = 10
 
 _embeddings = None
 _llm = None
@@ -110,22 +120,106 @@ def _load_llm():
 
 
 # -------------------------------------------------------------------
+# STANDARD NUMBER EXTRACTION
+# -------------------------------------------------------------------
+
+def _extract_is_number(query: str):
+    """
+    Detect an Indian Standard number from the query.
+
+    Examples:
+
+        "What is IS 1417?"
+        "Tell me about IS-1417"
+        "IS 302 requirements"
+
+    Returns:
+
+        "IS 1417"
+
+    or:
+
+        None
+    """
+
+    if not query:
+        return None
+
+    match = re.search(
+        r"\bIS[\s\-]*([0-9]{3,6})\b",
+        query,
+        re.IGNORECASE,
+    )
+
+    if not match:
+        return None
+
+    return f"IS {match.group(1)}"
+
+
+# -------------------------------------------------------------------
 # RETRIEVE BIS CLAUSES
 # -------------------------------------------------------------------
 
 def retrieve_clauses(
     query: str,
     top_k: int = 3,
+    retrieval_k: int | None = None,
 ):
+    """
+    Retrieve BIS records from Qdrant.
+
+    Supports both top_k and retrieval_k so
+    older agent calls do not crash.
+    """
+
+    if retrieval_k is not None:
+        top_k = retrieval_k
+
+    try:
+        top_k = int(top_k)
+    except (
+        TypeError,
+        ValueError,
+    ):
+        top_k = 3
+
+    top_k = max(
+        1,
+        min(top_k, 10),
+    )
+
+    # Keep the rest of your existing
+    # retrieve_clauses() function below.
     """
     Retrieve relevant BIS clauses from Qdrant.
 
-    Qdrant performs the vector similarity search.
-    Weak results are removed using a score threshold.
+    Strategy:
+
+    1. Create query embedding.
+    2. Retrieve a broader set of candidates.
+    3. Keep relevant results using a reasonable score threshold.
+    4. If the query contains an IS number, prefer matching
+       standard-number results.
+    5. Return the best results.
+
+    Example:
+
+        "What is IS 1417?"
+
+    will detect:
+
+        IS 1417
+
+    and prefer chunks whose payload contains:
+
+        is_number = "IS 1417"
     """
 
     if not query or not query.strip():
         return []
+
+    query = query.strip()
 
     # ---------------------------------------------------------------
     # 1. LOAD EMBEDDINGS
@@ -138,7 +232,7 @@ def retrieve_clauses(
     # ---------------------------------------------------------------
 
     query_vector = embeddings.embed_query(
-        query.strip()
+        query
     )
 
     # ---------------------------------------------------------------
@@ -151,25 +245,34 @@ def retrieve_clauses(
     # 4. VECTOR SEARCH
     # ---------------------------------------------------------------
 
+    # Retrieve more candidates than the final top_k.
+    #
+    # This prevents relevant chunks from being lost too early.
     results = qdrant_search(
         client,
         query_vector,
-        top_k=top_k,
+        top_k=max(
+            RETRIEVAL_K,
+            top_k,
+        ),
+    )
+
+    if not results:
+        return []
+
+    # ---------------------------------------------------------------
+    # 5. DETECT STANDARD NUMBER
+    # ---------------------------------------------------------------
+
+    requested_standard = _extract_is_number(
+        query
     )
 
     # ---------------------------------------------------------------
-    # 5. REMOVE WEAK RESULTS
+    # 6. REMOVE ONLY VERY WEAK RESULTS
     # ---------------------------------------------------------------
 
-    # Current pressure-cooker example:
-    #
-    # IS 4250 Clause 6.4 → 0.8155 ✅
-    # IS 4250 Clause 5.2 → 0.7732 ✅
-    # IS 302 Clause 9.1   → 0.6411 ❌
-    #
-    # So unrelated low-score clauses are removed.
-
-    results = [
+    filtered_results = [
         chunk
         for chunk in results
         if float(
@@ -177,10 +280,61 @@ def retrieve_clauses(
                 "score",
                 0.0,
             )
-        ) >= 0.70
+        ) >= MIN_SCORE
     ]
 
-    return results
+    # ---------------------------------------------------------------
+    # 7. STANDARD-AWARE RANKING
+    # ---------------------------------------------------------------
+
+    if requested_standard:
+
+        standard_results = [
+            chunk
+            for chunk in filtered_results
+            if str(
+                chunk.get(
+                    "is_number",
+                    "",
+                )
+            ).strip().upper()
+            == requested_standard.upper()
+        ]
+
+        # If exact standard matches exist, prioritize them.
+        if standard_results:
+
+            standard_results.sort(
+                key=lambda item: float(
+                    item.get(
+                        "score",
+                        0.0,
+                    )
+                ),
+                reverse=True,
+            )
+
+            return standard_results[:top_k]
+
+    # ---------------------------------------------------------------
+    # 8. NORMAL SCORE SORTING
+    # ---------------------------------------------------------------
+
+    filtered_results.sort(
+        key=lambda item: float(
+            item.get(
+                "score",
+                0.0,
+            )
+        ),
+        reverse=True,
+    )
+
+    # ---------------------------------------------------------------
+    # 9. RETURN BEST RESULTS
+    # ---------------------------------------------------------------
+
+    return filtered_results[:top_k]
 
 
 # -------------------------------------------------------------------

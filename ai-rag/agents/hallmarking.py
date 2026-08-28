@@ -9,9 +9,13 @@ from data.schemes_labs import (
 
 
 _HALLMARK_SCHEME = next(
-    scheme
-    for scheme in CERTIFICATION_SCHEMES
-    if scheme["scheme_name"] == "Hallmarking Scheme"
+    (
+        scheme
+        for scheme in CERTIFICATION_SCHEMES
+        if scheme.get("scheme_name")
+        == "Hallmarking Scheme"
+    ),
+    None,
 )
 
 
@@ -26,8 +30,7 @@ def run(state: dict) -> dict:
 
     chunks = retrieve_clauses(
         retrieval_query,
-        top_k=3,
-        retrieval_k=10,
+        top_k=10,
     )
 
     answer, mode = generate_grounded_answer(
@@ -35,16 +38,32 @@ def run(state: dict) -> dict:
         chunks,
     )
 
-    steps = " -> ".join(
-        _HALLMARK_SCHEME["process_steps"]
-    )
+    if _HALLMARK_SCHEME:
 
-    answer += (
-        f"\n\nHallmarking process: {steps}"
-    )
+        steps = " -> ".join(
+            _HALLMARK_SCHEME.get(
+                "process_steps",
+                [],
+            )
+        )
+
+        if steps:
+
+            answer += (
+                f"\n\nHallmarking process: "
+                f"{steps}"
+            )
 
     confidence = (
-        chunks[0].get("rerank_score", 0.0)
+        float(
+            chunks[0].get(
+                "rerank_score",
+                chunks[0].get(
+                    "score",
+                    0.0,
+                ),
+            )
+        )
         if chunks
         else 0.0
     )
@@ -56,11 +75,15 @@ def run(state: dict) -> dict:
 
         "answer": answer,
 
-        "confidence": confidence,
+        "confidence": round(
+            confidence,
+            4,
+        ),
 
         "agent_used": "hallmarking",
 
-        "low_confidence_flag": confidence < 0.15,
+        "low_confidence_flag":
+            confidence < 0.15,
 
         "generation_mode": mode,
     }

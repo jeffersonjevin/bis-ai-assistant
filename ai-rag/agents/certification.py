@@ -37,10 +37,9 @@ def run(state: dict) -> dict:
 
     # Retrieve BIS evidence as supporting context.
     chunks = retrieve_clauses(
-        query,
-        top_k=3,
-        retrieval_k=10,
-    )
+    query,
+    top_k=10,
+)
 
     steps = "\n".join(
         f"{index + 1}. {step}"

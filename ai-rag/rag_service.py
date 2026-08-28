@@ -1,13 +1,15 @@
 """
 Public service layer for BharatMaanak AI.
 
-Backend/FastAPI should call process_query().
+FastAPI calls process_query().
 """
 
 from graph import answer_query
 
 
-def process_query(query: str) -> dict:
+def process_query(
+    query: str
+) -> dict:
 
     if not query or not query.strip():
 
@@ -22,49 +24,60 @@ def process_query(query: str) -> dict:
     )
 
     return {
-        "query": result.get(
-            "query",
-            cleaned_query,
-        ),
 
-        "agent_used": result.get(
-            "agent_used"
-        ),
+        "query":
+            result.get(
+                "query",
+                cleaned_query,
+            ),
 
-        "confidence": result.get(
-            "confidence"
-        ),
+        "agent_used":
+            result.get(
+                "agent_used"
+            ),
 
-        "answer": result.get(
-            "answer"
-        ),
+        "confidence":
+            result.get(
+                "confidence"
+            ),
 
-        "sources": result.get(
-            "sources",
-            [],
-        ),
+        "answer":
+            result.get(
+                "answer"
+            ),
 
-        "low_confidence_flag": result.get(
-            "low_confidence_flag",
-            False,
-        ),
+        "sources":
+            result.get(
+                "sources",
+                [],
+            ),
 
-        "generation_mode": result.get(
-            "generation_mode"
-        ),
+        "low_confidence_flag":
+            result.get(
+                "low_confidence_flag",
+                False,
+            ),
 
-        "claims": result.get(
-            "claims",
-            [],
-        ),
+        "generation_mode":
+            result.get(
+                "generation_mode"
+            ),
 
-        "verification": result.get(
-            "verification",
-            [],
-        ),
+        "claims":
+            result.get(
+                "claims",
+                [],
+            ),
 
-        "verification_confidence": result.get(
-            "verification_confidence",
-            0.0,
-        ),
+        "verification":
+            result.get(
+                "verification",
+                [],
+            ),
+
+        "verification_confidence":
+            result.get(
+                "verification_confidence",
+                0.0,
+            ),
     }

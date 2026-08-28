@@ -1,0 +1,21 @@
+﻿answer,category,id,question,source_type,subcategory
+Hallmarking is the official determination and recording of the purity of precious metal articles such as gold and silver.,Hallmarking,S001,What is hallmarking?,starter_example,Basics
+HUID is a unique identification number associated with a hallmarked jewellery article and can be checked through the BIS CARE app.,Hallmarking,S002,What is HUID?,starter_example,HUID
+Use the BIS CARE app's Verify HUID feature to check information about a hallmarked jewellery item.,Hallmarking,S003,How can I verify a HUID?,starter_example,Verification
+"Check the hallmark-related details, the jeweller's registration information, and obtain an authentic bill or invoice.",Hallmarking,S004,What should I check when buying hallmarked jewellery?,starter_example,Purchase
+"The bill or invoice is useful for resolving disputes, misuse, or complaints related to a hallmarked article.",Hallmarking,S005,Why should I keep the jewellery bill?,starter_example,Bill
+A consumer can have jewellery or a sample tested at a BIS-recognized Assaying and Hallmarking Centre on a chargeable basis.,Hallmarking,S006,Can a consumer get jewellery tested?,starter_example,Testing
+Hallmarking charges are charged per article rather than according to the weight of the jewellery.,Hallmarking,S007,Are hallmarking charges based on jewellery weight?,starter_example,Charges
+BIS-registered jewellers can approach an Assaying and Hallmarking Centre for hallmarking under the applicable process.,Hallmarking,S008,Who can submit jewellery for hallmarking?,starter_example,Jewellers
+"Consumers can raise complaints concerning the quality of BIS-certified products, misuse of BIS Standard Marks, and relevant hallmarking issues.",Consumer,S009,What complaints can be made to BIS?,starter_example,Complaints
+The BIS Standard Mark identifies products covered by applicable BIS conformity or certification schemes.,Consumer,S010,What is the BIS Standard Mark?,starter_example,Standard Mark
+"The app provides features such as verifying licence details, verifying HUID, finding standards and BIS facilities, and accessing certification information.",Consumer,S011,What can I do with the BIS CARE app?,starter_example,BIS CARE
+BIS conducts consumer awareness programmes through its regional and branch office network and works with consumer organizations.,Consumer,S012,How does BIS create consumer awareness?,starter_example,Awareness
+"According to BIS hallmarking FAQ information, the hallmark is stated to remain valid for the lifetime of hallmarked jewellery.",FAQs,S013,Is a hallmark valid for the lifetime of jewellery?,starter_example,Hallmarking
+A BIS licence permits use of a specified Standard Mark for goods or articles that conform to the applicable standard under the BIS framework.,FAQs,S014,What is a BIS licence?,starter_example,Certification
+"BIS assesses manufacturing capability, process controls, quality control and testing capability, and conformity of the product to the relevant standard.",FAQs,S015,How does BIS grant a product certification licence?,starter_example,Certification
+"Verify hallmark-related details, check the jeweller's registration information, and obtain a proper invoice.",Guidelines,S016,What should a consumer do before buying hallmarked jewellery?,starter_example,Consumer
+The consumer can use BIS verification facilities and may also obtain testing through a BIS-recognized Assaying and Hallmarking Centre.,Guidelines,S017,How can a consumer check jewellery purity?,starter_example,Hallmarking
+Keep the purchase bill or invoice and relevant hallmark or HUID information to support complaint or dispute resolution.,Guidelines,S018,What should I keep when making a complaint about jewellery?,starter_example,Complaints
+The manufacturer should identify the applicable Indian Standard and follow the online BIS product certification application process and applicable requirements.,Guidelines,S019,How can a manufacturer apply for BIS product certification?,starter_example,Certification
+Use the Consumer and FAQ sections of the official BIS website for current public-facing guidance and services.,FAQs,S020,Where can I find official BIS consumer information?,starter_example,Consumer

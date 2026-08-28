@@ -3,15 +3,15 @@ LangGraph orchestration for BharatMaanak AI.
 
 Flow:
 
-    User Query
-        ↓
-    Intent Detection
-        ↓
-    Specialized Agent
-        ↓
-    Retrieval / Processing
-        ↓
-    Answer
+User Query
+    ↓
+Intent Detection
+    ↓
+Specialized Agent
+    ↓
+Retrieval / Processing
+    ↓
+Answer
 """
 
 from langgraph.graph import (
@@ -31,12 +31,6 @@ from agents import (
     consumer,
 )
 
-from vectorstore import close_client
-
-
-# -------------------------------------------------------------------
-# AGENTS
-# -------------------------------------------------------------------
 
 _AGENT_NODES = {
 
@@ -57,41 +51,35 @@ _AGENT_NODES = {
 }
 
 
-# -------------------------------------------------------------------
-# ROUTING
-# -------------------------------------------------------------------
+def _route(
+    state: RAGState
+) -> str:
 
-def _route(state: RAGState) -> str:
-    """
-    Route the query according to detected intent.
-    """
-
-    intent = state.get("intent")
+    intent = state.get(
+        "intent"
+    )
 
     if intent not in _AGENT_NODES:
 
-        # Safe fallback.
         return "standard_finder"
 
     return intent
 
 
-# -------------------------------------------------------------------
-# BUILD GRAPH
-# -------------------------------------------------------------------
-
 def build_graph():
 
-    graph = StateGraph(RAGState)
+    graph = StateGraph(
+        RAGState
+    )
 
-    # Intent node.
     graph.add_node(
         "classify_intent",
         classify_intent,
     )
 
-    # Specialized agents.
-    for name, function in _AGENT_NODES.items():
+    for name, function in (
+        _AGENT_NODES.items()
+    ):
 
         graph.add_node(
             name,
@@ -121,10 +109,6 @@ def build_graph():
     return graph.compile()
 
 
-# -------------------------------------------------------------------
-# COMPILED GRAPH
-# -------------------------------------------------------------------
-
 _compiled_graph = None
 
 
@@ -139,14 +123,9 @@ def get_graph():
     return _compiled_graph
 
 
-# -------------------------------------------------------------------
-# ANSWER QUERY
-# -------------------------------------------------------------------
-
-def answer_query(query: str) -> dict:
-    """
-    Execute the complete LangGraph workflow.
-    """
+def answer_query(
+    query: str
+) -> dict:
 
     if not query or not query.strip():
 
@@ -156,18 +135,12 @@ def answer_query(query: str) -> dict:
 
     graph = get_graph()
 
-    result = graph.invoke(
+    return graph.invoke(
         {
             "query": query.strip()
         }
     )
 
-    return result
-
-
-# -------------------------------------------------------------------
-# CLI TEST
-# -------------------------------------------------------------------
 
 if __name__ == "__main__":
 
@@ -177,45 +150,41 @@ if __name__ == "__main__":
         sys.argv[1]
         if len(sys.argv) > 1
         else
-        "What safety standard applies to a pressure cooker?"
+        "What is hallmarking?"
     )
 
-    try:
+    result = answer_query(
+        query
+    )
 
-        result = answer_query(
-            query
-        )
+    print(
+        f"\nQ: {result.get('query')}"
+    )
+
+    print(
+        f"Agent: "
+        f"{result.get('agent_used')}"
+    )
+
+    print(
+        f"Confidence: "
+        f"{result.get('confidence')}"
+    )
+
+    print(
+        f"\nAnswer:\n"
+        f"{result.get('answer')}"
+    )
+
+    print(
+        "\nSources:"
+    )
+
+    for source in result.get(
+        "sources",
+        [],
+    ):
 
         print(
-            f"\nQ: {result.get('query')}"
+            f"  - {source}"
         )
-
-        print(
-            f"Routed to: "
-            f"{result.get('agent_used')}"
-        )
-
-        print(
-            f"Confidence: "
-            f"{result.get('confidence')}"
-        )
-
-        print(
-            f"\nA:\n"
-            f"{result.get('answer')}"
-        )
-
-        print("\nSources:")
-
-        for source in result.get(
-            "sources",
-            [],
-        ):
-
-            print(
-                f"  - {source}"
-            )
-
-    finally:
-
-        close_client()
