@@ -1,0 +1,217 @@
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-display: 'Space Grotesk', ui-sans-serif, sans-serif;
+  --font-body: 'Inter', ui-sans-serif, sans-serif;
+  --font-mono: 'IBM Plex Mono', ui-monospace, monospace;
+
+  /* ---- Text tokens (dark theme: light ink on deep-blue base) ---- */
+  --color-ink: #F1F5F9;
+  --color-ink-soft: #B9C6DE;
+  --color-ink-faint: #7E8CAA;
+
+  /* ---- Brand blue tokens ----
+     navy      = primary accent (solid buttons, badges, active states, links)
+     navy-deep = darker hover state for navy
+     blue      = secondary highlight blue (lighter, for text accents/links)
+     blue-light  = light chip/badge tone
+     blue-mist   = translucent hover wash */
+  --color-navy: #3B82F6;
+  --color-navy-deep: #1D4ED8;
+  --color-blue: #60A5FA;
+  --color-blue-light: #93C5FD;
+  --color-blue-mist: rgba(59, 130, 246, 0.14);
+
+  /* ---- Surfaces ----
+     surface        = page-level neutral wash (kept translucent so the fixed
+                       AnimatedBackground behind the app shell shows through)
+     surface-raised = card / panel surface, a solid deep-navy "glass" tone
+     line            = hairline borders */
+  --color-surface: rgba(255, 255, 255, 0.035);
+  --color-surface-raised: #101E3D;
+  --color-line: rgba(255, 255, 255, 0.12);
+
+  --color-verified: #34D399;
+  --color-verified-soft: rgba(52, 211, 153, 0.16);
+  --color-seal: #E5A93F;
+  --color-seal-soft: rgba(229, 169, 63, 0.16);
+  --color-alert: #F87171;
+  --color-alert-soft: rgba(248, 113, 113, 0.16);
+
+  /* ---- Background system tokens (used by AnimatedBackground) ---- */
+  --color-bg-950: #020617;
+  --color-bg-900: #0F172A;
+  --color-bg-800: #0A2540;
+  --color-bg-accent: #1D4ED8;
+
+  /* Glow-based shadows replace the old flat drop-shadows so cards read
+     correctly against a dark background and "glow" on hover. */
+  --shadow-card: 0 1px 0 rgba(255,255,255,0.05) inset, 0 10px 28px -14px rgba(0,0,0,0.55);
+  --shadow-card-hover: 0 1px 0 rgba(255,255,255,0.08) inset, 0 22px 44px -16px rgba(0,0,0,0.6), 0 0 0 1px rgba(59,130,246,0.22), 0 0 28px -6px rgba(59,130,246,0.45);
+  --shadow-nav: 0 1px 0 rgba(255,255,255,0.06), 0 12px 32px -18px rgba(0,0,0,0.7);
+}
+
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: var(--font-body);
+  color: var(--color-ink);
+  /* Static fallback matching the animated background's deepest tones, so
+     there is never a flash of the old light theme before AnimatedBackground
+     mounts (or if JS is unavailable). */
+  background: linear-gradient(160deg, #020617 0%, #0F172A 45%, #0A2540 75%, #123a72 100%);
+  background-attachment: fixed;
+  -webkit-font-smoothing: antialiased;
+}
+
+::selection { background: var(--color-blue-mist); color: var(--color-ink); }
+
+.notch-corner {
+  clip-path: polygon(0 0, calc(100% - 18px) 0, 100% 18px, 100% 100%, 0 100%);
+}
+.notch-corner-sm {
+  clip-path: polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 0 100%);
+}
+
+* { scrollbar-width: thin; scrollbar-color: rgba(255,255,255,0.18) transparent; }
+*::-webkit-scrollbar { width: 6px; height: 6px; }
+*::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.18); border-radius: 999px; }
+
+@keyframes fade-up {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.animate-fade-up { animation: fade-up 0.5s cubic-bezier(0.22, 1, 0.36, 1) both; }
+
+@keyframes pulse-dot {
+  0%, 100% { opacity: 0.3; transform: scale(0.85); }
+  50% { opacity: 1; transform: scale(1); }
+}
+.animate-pulse-dot { animation: pulse-dot 1.4s ease-in-out infinite; }
+
+@keyframes signal-travel {
+  0% { top: 0%; opacity: 0; }
+  10% { opacity: 1; }
+  90% { opacity: 1; }
+  100% { top: 100%; opacity: 0; }
+}
+.animate-signal { animation: signal-travel 3.2s cubic-bezier(0.45, 0, 0.55, 1) infinite; }
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+.animate-shimmer { background-size: 200% 100%; animation: shimmer 1.6s linear infinite; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+.focus-ring:focus-visible {
+  outline: 2px solid var(--color-blue);
+  outline-offset: 2px;
+  border-radius: 8px;
+}
+
+/* =========================================================================
+   Animated background system (AnimatedBackground.tsx)
+   Pure-CSS, transform/opacity-only animations so they stay GPU-cheap and
+   run continuously without fighting Framer Motion for the render loop.
+   ========================================================================= */
+
+.bg-mesh {
+  background:
+    radial-gradient(1200px 800px at 12% -8%, rgba(29,78,216,0.35), transparent 60%),
+    radial-gradient(1000px 700px at 88% 8%, rgba(59,130,246,0.22), transparent 55%),
+    radial-gradient(1400px 900px at 50% 115%, rgba(10,37,64,0.9), transparent 60%),
+    linear-gradient(160deg, #020617 0%, #0F172A 40%, #0A2540 72%, #123a72 100%);
+  background-size: 160% 160%, 160% 160%, 140% 140%, 140% 140%;
+  animation: mesh-drift 26s ease-in-out infinite alternate;
+}
+@keyframes mesh-drift {
+  0%   { background-position: 0% 0%, 100% 0%, 50% 100%, 0% 0%; }
+  100% { background-position: 12% 8%, 84% 14%, 46% 92%, 8% 6%; }
+}
+
+.bg-blob {
+  position: absolute;
+  border-radius: 9999px;
+  filter: blur(90px);
+  opacity: 0.55;
+  will-change: transform;
+}
+@keyframes blob-float-a {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  50% { transform: translate(40px, -30px) scale(1.08); }
+}
+@keyframes blob-float-b {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  50% { transform: translate(-50px, 35px) scale(1.1); }
+}
+@keyframes blob-float-c {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  50% { transform: translate(30px, 40px) scale(0.94); }
+}
+.animate-blob-a { animation: blob-float-a 22s ease-in-out infinite; }
+.animate-blob-b { animation: blob-float-b 28s ease-in-out infinite; }
+.animate-blob-c { animation: blob-float-c 34s ease-in-out infinite; }
+
+.bg-grid {
+  background-image:
+    linear-gradient(rgba(255,255,255,0.5) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.5) 1px, transparent 1px);
+  background-size: 44px 44px;
+  opacity: 0.05;
+  animation: grid-pulse 10s ease-in-out infinite;
+}
+@keyframes grid-pulse {
+  0%, 100% { opacity: 0.035; }
+  50% { opacity: 0.065; }
+}
+
+.bg-aurora {
+  position: absolute;
+  height: 2px;
+  border-radius: 9999px;
+  background: linear-gradient(90deg, transparent, rgba(96,165,250,0.9), rgba(147,197,253,0.6), transparent);
+  filter: blur(2px);
+  mix-blend-mode: screen;
+}
+@keyframes aurora-sweep-a {
+  0% { transform: translateX(-30%) rotate(-8deg); opacity: 0; }
+  15% { opacity: 0.7; }
+  85% { opacity: 0.7; }
+  100% { transform: translateX(30%) rotate(-8deg); opacity: 0; }
+}
+@keyframes aurora-sweep-b {
+  0% { transform: translateX(30%) rotate(6deg); opacity: 0; }
+  15% { opacity: 0.5; }
+  85% { opacity: 0.5; }
+  100% { transform: translateX(-30%) rotate(6deg); opacity: 0; }
+}
+.animate-aurora-a { animation: aurora-sweep-a 16s ease-in-out infinite; }
+.animate-aurora-b { animation: aurora-sweep-b 21s ease-in-out infinite 3s; }
+
+@keyframes particle-drift {
+  0% { transform: translateY(0) translateX(0); opacity: 0; }
+  10% { opacity: var(--particle-opacity, 0.5); }
+  90% { opacity: var(--particle-opacity, 0.5); }
+  100% { transform: translateY(-120px) translateX(var(--particle-drift-x, 20px)); opacity: 0; }
+}
+.bg-particle {
+  position: absolute;
+  border-radius: 9999px;
+  background: #BFDBFE;
+  animation: particle-drift var(--particle-duration, 12s) ease-in-out infinite;
+  animation-delay: var(--particle-delay, 0s);
+}
+
+.bg-vignette {
+  background: radial-gradient(120% 100% at 50% 0%, transparent 55%, rgba(2,6,23,0.55) 100%);
+}
